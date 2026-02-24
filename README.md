@@ -1,94 +1,114 @@
-# Subnautica: Bellow Zero Harcoded Arguments Patcher for VR
+# Subnautica: Below Zero — VR Argument Patcher
 
-> Bypass Steam's forced `-vrmode none` argument for Unity-based VR games.
+> Two methods to bypass Steam's forced `-vrmode none` for Unity-based VR games.
 
-## NOTE : IF YOU GONNA USE NAUTILUS ETC. USE VR LAUNCHER MAKER INSTEAD. WRAPPER METHOD FOR ONLY SUBMERSED VR GAMEPLAY AND NAUTILUS WILL NOT WORK. WHILE USING VR LAUNCHER NEVER FORGET THE PUT STEAM STARTING ARGUMENTS GIVEN IN LAUNCHER MAKER OR LAUNCHER WILL NEVER WORK. THINK VR LAUNCHER LIKE SMAPI FOR SUBNAUTICA
-
-Some Unity games (like Subnautica: Below Zero) have VR support removed at the binary level and are launched by Steam with `-vrmode none` hardcoded — overriding any launch options you set. VR Wrapper Creator solves this by replacing the game's EXE with a lightweight wrapper that ignores Steam's arguments and launches the real executable with your own.
+Some Unity games (like Subnautica: Below Zero) have VR support stripped at the binary level. Steam hardcodes `-vrmode none` before any launch options you set, making it impossible to enable VR through normal means. This repo provides two tools to work around that — pick the one that fits your setup.
 
 ---
 
-## How It Works
+## Which Tool Should I Use?
 
-Steam launches `GameName.exe` → the wrapper intercepts → launches `GameNameReal.exe -vrmode openvr` (or any arguments you choose).
+| | VR Launcher Maker | VR Wrapper Maker |
+|---|---|---|
+| **BepInEx mods** (Nautilus, RadialTabs, etc.) | ✅ Work | ❌ Break |
+| **Game EXE renamed** | No | Yes |
+| **Steam launch option required** | ✅ Yes | No |
+| **Recommended** | ✅ Most users | Vanilla VR only |
+
+**TL;DR:** Use **VR Launcher Maker** if you have any mods installed. Use **VR Wrapper Maker** only if you're running a completely vanilla game.
+
+---
+
+## Method 1 — VR Launcher Maker ⭐ Recommended
+
+Creates a small `GameLauncher.exe` next to the real game. You tell Steam to launch the launcher instead of the game. The launcher ignores Steam's injected arguments and starts the actual game with your own.
+
+> Think of it like SMAPI for Stardew Valley — a small entry point that takes control before the game starts.
 
 ```
-Steam
-  └─► GameName.exe          ← wrapper (4 KB)
-        └─► GameNameReal.exe -vrmode openvr   ← actual game
+Steam → SubnauticaZeroLauncher.exe   ← Steam's -vrmode none ends here (ignored)
+              └─► SubnauticaZero.exe -vrmode openvr   ← real game, original name intact
+                        └─► BepInEx sees "SubnauticaZero" → all mods load ✓
 ```
 
-The wrapper is a compiled C# `.exe` that does nothing but call the real executable with your forced arguments. No DLL injection, no hooks, no background processes.
+### Setup
+
+1. Run `vr_launcher_maker.py`
+2. Click **Browse** and select your game folder
+3. The game EXE and launcher name are auto-filled
+4. Click **▶ CREATE LAUNCHER**
+5. Copy the Steam launch option shown in the yellow box (or click it to copy)
+6. In Steam: right-click game → **Properties** → **Launch Options** → paste it
+
+The launch option will look like:
+```
+"C:\...\SubnauticaZero\SubnauticaZeroLauncher.exe" %command%
+```
+
+### Removing
+
+Click **↩ REMOVE** — only the launcher EXE is deleted. The game EXE is never touched.
+
+---
+
+## Method 2 — VR Wrapper Maker
+
+Renames the original game EXE and replaces it with a tiny wrapper. Steam launches the wrapper, which in turn launches the renamed real EXE with your arguments. No Steam launch option changes needed.
+
+> ⚠️ **Warning:** Renaming the game EXE breaks BepInEx mod process filters. Mods like Nautilus, RadialTabs, and Subnautica Config Handler will be skipped entirely. Only use this method if you play without mods.
+
+```
+Steam → SubnauticaZero.exe           ← wrapper (4 KB), Steam's args ignored
+              └─► SubnauticaZeroReal.exe -vrmode openvr   ← renamed real game
+```
+
+### Setup
+
+1. Run `vr_wrapper_maker.py`
+2. Click **Browse** and select your game folder
+3. Set your launch arguments (default: `-vrmode openvr`)
+4. Click **▶ APPLY WRAPPER**
+
+The tool will:
+1. Rename `SubnauticaZero.exe` → `SubnauticaZeroReal.exe`
+2. Rename `SubnauticaZero_Data\` → `SubnauticaZeroReal_Data\`
+3. Compile and place a new wrapper `SubnauticaZero.exe`
+
+Launch normally from Steam — no launch option changes needed.
+
+### Undoing
+
+Click **↩ UNDO** — the wrapper is deleted and all renames are reversed.
 
 ---
 
 ## Requirements
 
-- **Python 3.x** (with `tkinter` — included in standard Windows installs)
+- **Python 3.x** (tkinter included in standard Windows installs)
 - **.NET Framework 4.x** (pre-installed on Windows 10/11)
 - **SteamVR** running before launching the game
-
----
 
 ## Installation
 
 ```
-git clone https://github.com/yourusername/vr-wrapper-creator
-cd vr-wrapper-creator
-python vr_wrapper_maker.py
+git clone https://github.com/yourusername/vr-argument-patcher
+cd vr-argument-patcher
+python vr_launcher_maker.py   # or vr_wrapper_maker.py
 ```
 
 No additional packages needed.
 
 ---
 
-## Usage
-
-### 1. Select Game Folder
-
-Click **Browse** and navigate to your game's installation directory (e.g. `steamapps\common\SubnauticaZero`). The EXE is auto-detected.
-
-### 2. Set Arguments
-
-The default is `-vrmode openvr`. Change this to whatever arguments your game needs.
-
-### 3. Apply Wrapper
-
-Click **▶ APPLY WRAPPER**. The tool will:
-
-1. Rename `GameName.exe` → `GameNameReal.exe`
-2. Rename `GameName_Data\` → `GameNameReal_Data\`
-3. Compile and place a wrapper `GameName.exe` in its place
-
-After a successful apply, a profile is automatically saved so you don't have to re-enter anything next time.
-
-### 4. Launch
-
-Launch the game normally from Steam. The wrapper will run and pass your arguments to the real executable.
-
----
-
 ## Profiles
 
-Your game configurations are saved as named profiles in `vr_wrapper_profiles.json` (stored next to the script). The last used profile is auto-loaded on startup.
+Both tools save game configurations as named profiles in a JSON file next to the script. The last used profile is auto-loaded on startup.
 
 | Action | Description |
 |--------|-------------|
-| **Load** | Load a saved profile into the fields |
+| **Load** | Load a saved profile |
 | **Save** | Save current fields as a named profile |
 | **Delete** | Remove a profile |
-
----
-
-## Undoing
-
-Click **↩ UNDO** to reverse the process — the wrapper is deleted and the original EXE and `_Data` folder are restored to their original names.
-
----
-
-## Status Check
-
-Click **? STATUS** at any time to see whether the wrapper is currently active for the selected game.
 
 ---
 
@@ -99,56 +119,32 @@ Click **? STATUS** at any time to see whether the wrapper is currently active fo
 | Subnautica: Below Zero | `-vrmode openvr` |
 | Subnautica (original) | `-vrmode openvr` |
 
-Works with any Unity game that accepts command-line VR arguments.
+Both tools are general-purpose and work with any Unity game that accepts command-line VR arguments.
 
 ---
 
 ## Troubleshooting
 
 **`csc.exe not found`**
-Make sure .NET Framework 4.x is installed. It comes pre-installed on Windows 10/11 but can be downloaded from [Microsoft](https://dotnet.microsoft.com/en-us/download/dotnet-framework).
+.NET Framework 4.x is required. It comes pre-installed on Windows 10/11 but can be downloaded from [Microsoft](https://dotnet.microsoft.com/en-us/download/dotnet-framework).
+
+**Mods not loading (Nautilus, RadialTabs, etc.)**
+You're using the Wrapper method. Switch to **VR Launcher Maker** instead — it keeps the game EXE name intact so BepInEx process filters work correctly.
 
 **Game still launches in non-VR mode**
-- Make sure SteamVR is running and your headset is active *before* launching the game
-- Check `BepInEx\LogOutput.log` and confirm the command line shows your wrapper arguments, not `-vrmode none`
-- Run **? STATUS** to confirm the wrapper is actually in place
+- Make sure SteamVR is running *before* launching the game
+- If using VR Launcher Maker, confirm the Steam launch option is set correctly
+- Check `BepInEx\LogOutput.log` — the command line should show `-vrmode openvr`, not `-vrmode none`
 
 **`DllNotFoundException: OVRPlugin`**
-The game is missing `OVRPlugin.dll`. Copy it from the original Subnautica (1) installation:
+The game is missing `OVRPlugin.dll`. Copy it from the original Subnautica installation:
 ```
 Subnautica\Subnautica_Data\Plugins\OVRPlugin.dll
-→ YourGame_Data\Plugins\OVRPlugin.dll
+  → SubnauticaZero_Data\Plugins\OVRPlugin.dll
 ```
 
-**Game says `There should be 'GameNameReal_Data' folder`**
-The `_Data` folder rename failed or was skipped. Manually rename `GameName_Data` → `GameNameReal_Data`, then re-apply.
-
----
-
-## How the Wrapper Is Built
-
-The tool compiles the following C# code at runtime using `csc.exe`:
-
-```csharp
-using System;
-using System.Diagnostics;
-using System.IO;
-
-class VRWrapper {
-    static void Main(string[] args) {
-        string gameDir = AppDomain.CurrentDomain.BaseDirectory;
-        string realExe = Path.Combine(gameDir, "GameNameReal.exe");
-        ProcessStartInfo psi = new ProcessStartInfo();
-        psi.FileName = realExe;
-        psi.Arguments = "-vrmode openvr";
-        psi.UseShellExecute = false;
-        psi.WorkingDirectory = gameDir;
-        Process.Start(psi);
-    }
-}
-```
-
-The generated wrapper is ~4 KB. Steam's arguments never reach the real executable.
+**Wrapper only: `There should be 'GameNameReal_Data' folder`**
+The `_Data` folder rename failed. Manually rename `SubnauticaZero_Data` → `SubnauticaZeroReal_Data`, then re-apply.
 
 ---
 
