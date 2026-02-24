@@ -2,6 +2,8 @@
 
 > Bypass Steam's forced `-vrmode none` argument for Unity-based VR games.
 
+## NOTE : THIS METHOD ONLY MAKES SUBMERSED BZ WORKING. NAUTILUS WILL NOT WORK!
+
 Some Unity games (like Subnautica: Below Zero) have VR support removed at the binary level and are launched by Steam with `-vrmode none` hardcoded — overriding any launch options you set. VR Wrapper Creator solves this by replacing the game's EXE with a lightweight wrapper that ignores Steam's arguments and launches the real executable with your own.
 
 ---
