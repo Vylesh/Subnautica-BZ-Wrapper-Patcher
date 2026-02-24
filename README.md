@@ -154,4 +154,4 @@ The generated wrapper is ~4 KB. Steam's arguments never reach the real executabl
 
 ## License
 
-MIT
+Boost Software License - Version 1.0
