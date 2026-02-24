@@ -1,4 +1,4 @@
-# Subnautica: Bellow Zero VR Wrapper Creator
+# Subnautica: Bellow Zero Harcoded Arguments Patcher for VR
 
 > Bypass Steam's forced `-vrmode none` argument for Unity-based VR games.
 
